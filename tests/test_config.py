@@ -3,7 +3,7 @@ from nexis_ml import load_config
 
 def test_load_plain_toml(tmp_path):
     p = tmp_path / "train.toml"
-    p.write_bytes(b'[train]\nepochs = 5\n')
+    p.write_bytes(b"[train]\nepochs = 5\n")
     assert load_config(str(p)) == {"train": {"epochs": 5}}
 
 
