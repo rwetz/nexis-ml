@@ -1,5 +1,6 @@
 import io
 import json
+import os
 
 import pytest
 
@@ -96,5 +97,5 @@ def test_artifact_and_sample_events(tmp_path):
     assert {"artifact", "sample"} <= kinds
     summary = [e for e in events if e["ev"] == "run.finished"][0]["summary"]
     assert summary["artifacts"] == [
-        {"kind": "confusion-matrix", "path": "artifacts/cm.json"}
+        {"kind": "confusion-matrix", "path": os.path.abspath("artifacts/cm.json")}
     ]

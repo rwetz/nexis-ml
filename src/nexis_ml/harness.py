@@ -139,7 +139,8 @@ class Run:
         self._console(f"epoch {i}{of}  {latest}")
 
     def artifact(self, kind: str, path: str | os.PathLike[str]) -> None:
-        path = str(path)
+        # Absolute so Nexis never has to guess the base directory
+        path = os.path.abspath(str(path))
         self._artifacts.append({"kind": kind, "path": path})
         event = self._emitter.emit("artifact", run=self.id, kind=kind, path=path)
         self.dir.append_event(event)
@@ -177,7 +178,7 @@ class Run:
             "run.started",
             run=self.id,
             name=self.name,
-            dir=self.dir.path,
+            dir=os.path.abspath(self.dir.path),
             config=self.config,
             totalEpochs=self.total_epochs,
             protocol=PROTOCOL_VERSION,

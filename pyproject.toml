@@ -24,7 +24,8 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-torch = ["torch>=2.6"]
+# numpy isn't used directly, but torch warns on startup without it
+torch = ["torch>=2.6", "numpy"]
 dev = ["pytest>=8"]
 
 [project.scripts]

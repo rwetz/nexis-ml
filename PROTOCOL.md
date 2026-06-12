@@ -39,7 +39,7 @@ messages arrive as JSON lines on stdin.
 - Every event is also appended to the run's `metrics.jsonl`, so Nexis
   renders finished runs by reading files — no engine process needed.
   `nexis-ml replay` re-streams that file for frontend development.
-- Artifacts are files on disk referenced by path; the protocol never
-  inlines binary data.
+- Artifacts are files on disk referenced by **absolute** path (as is
+  the run `dir`); the protocol never inlines binary data.
 - `run.finished` + `summary.json` are guaranteed on every exit path.
 - Exit codes: 0 ok, 1 error, 130 cancelled via Ctrl+C.

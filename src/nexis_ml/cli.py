@@ -46,7 +46,12 @@ def main(argv: list[str] | None = None) -> int:
     p_train.add_argument(
         "--config", default="train.toml", help="config file, relative to the project"
     )
-    p_train.add_argument("--nexis-protocol", action="store_true")
+    # SUPPRESS so the subparser doesn't clobber the top-level flag's value
+    # when the flag is given before the subcommand (argparse writes subparser
+    # defaults into the same namespace after the parent has parsed).
+    p_train.add_argument(
+        "--nexis-protocol", action="store_true", default=argparse.SUPPRESS
+    )
 
     p_runs = sub.add_parser("runs", help="list runs in a project")
     p_runs.add_argument("dir", nargs="?", default=".")

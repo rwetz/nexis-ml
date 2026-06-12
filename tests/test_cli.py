@@ -2,6 +2,7 @@ import csv
 import json
 
 from nexis_ml import cli
+from nexis_ml.protocol import ENV_FLAG
 
 
 def test_new_scaffolds_tabular(tmp_path, capsys):
@@ -60,3 +61,21 @@ def test_replay_accepts_run_dir(tmp_path, capsys):
 
 def test_replay_missing_path_errors(tmp_path, capsys):
     assert cli.main(["replay", str(tmp_path / "nope.jsonl")]) == 1
+
+
+def test_protocol_flag_before_subcommand(tmp_path, capsys, monkeypatch):
+    # regression: the train subparser's own --nexis-protocol default used
+    # to clobber the top-level flag's parsed value
+    monkeypatch.delenv(ENV_FLAG, raising=False)
+    cli.main(["--nexis-protocol", "train", str(tmp_path)])  # fails (no train.py)
+    import os
+
+    assert os.environ.get(ENV_FLAG) == "1"
+
+
+def test_protocol_flag_after_subcommand(tmp_path, capsys, monkeypatch):
+    monkeypatch.delenv(ENV_FLAG, raising=False)
+    cli.main(["train", str(tmp_path), "--nexis-protocol"])  # fails (no train.py)
+    import os
+
+    assert os.environ.get(ENV_FLAG) == "1"
