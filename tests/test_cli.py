@@ -18,6 +18,21 @@ def test_new_scaffolds_tabular(tmp_path, capsys):
     assert {r["label"] for r in rows} == {"0", "1"}
 
 
+def test_new_defaults_dir_to_template_name(tmp_path, capsys, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    assert cli.main(["new", "tabular"]) == 0
+    assert (tmp_path / "tabular" / "train.py").is_file()
+
+
+def test_new_in_protocol_mode_keeps_stdout_clean(tmp_path, capsys, monkeypatch):
+    monkeypatch.setenv("NEXIS_ML_PROTOCOL", "1")
+    dest = tmp_path / "proj"
+    assert cli.main(["new", "tabular", str(dest)]) == 0
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "created tabular project" in captured.err
+
+
 def test_new_refuses_nonempty_dir(tmp_path, capsys):
     dest = tmp_path / "proj"
     dest.mkdir()

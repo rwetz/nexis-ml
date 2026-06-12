@@ -36,9 +36,17 @@ def main(argv: list[str] | None = None) -> int:
 
     p_new = sub.add_parser("new", help="scaffold a new project from a template")
     p_new.add_argument("template", choices=sorted(TEMPLATES))
-    p_new.add_argument("dir")
+    p_new.add_argument(
+        "dir",
+        nargs="?",
+        default=None,
+        help="project directory (default: ./<template>)",
+    )
     p_new.add_argument(
         "--force", action="store_true", help="scaffold into a non-empty directory"
+    )
+    p_new.add_argument(
+        "--nexis-protocol", action="store_true", default=argparse.SUPPRESS
     )
 
     p_train = sub.add_parser("train", help="run the project's train.py")
@@ -87,15 +95,20 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _cmd_new(args: argparse.Namespace) -> int:
+    target = args.dir if args.dir is not None else args.template
     try:
-        dest = scaffold(args.template, args.dir, force=args.force)
+        dest = scaffold(args.template, target, force=args.force)
     except (FileExistsError, ValueError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
-    print(f"created {args.template} project at {dest}")
-    print("next:")
-    print(f"  cd {args.dir}")
-    print("  nexis-ml train        # needs torch: pip install nexis-ml[torch]")
+    # In protocol mode stdout belongs to NDJSON events; humans read stderr.
+    out = sys.stderr if os.environ.get(ENV_FLAG) == "1" else sys.stdout
+    print(f"created {args.template} project at {dest}", file=out)
+    print("next:", file=out)
+    print(f"  cd {target}", file=out)
+    print(
+        "  nexis-ml train        # needs torch: pip install nexis-ml[torch]", file=out
+    )
     return 0
 
 
