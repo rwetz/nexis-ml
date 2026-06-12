@@ -85,6 +85,7 @@ python -m venv .venv
 .venv\Scripts\pip install -e .[dev]      # Windows
 .venv/bin/pip install -e .[dev]          # elsewhere
 pytest
+ruff check src tests && ruff format --check src tests
 ```
 
 The test suite needs no torch — core stays framework-free by design.

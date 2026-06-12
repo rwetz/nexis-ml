@@ -164,11 +164,16 @@ def save_checkpoint(path):
 # ── training loop ─────────────────────────────────────────────────────
 
 task = "classification" if classification else "regression"
-run_config = {**cfg, "derived": {"features": feature_names, "classes": classes, "task": task}}
+run_config = {
+    **cfg,
+    "derived": {"features": feature_names, "classes": classes, "task": task},
+}
 
 with nexis_ml.track("tabular", config=run_config, total_epochs=EPOCHS) as run:
-    run.info(f"{task}: {len(X_train)} train / {len(X_val)} val rows, "
-             f"{len(feature_names)} features")
+    run.info(
+        f"{task}: {len(X_train)} train / {len(X_val)} val rows, "
+        f"{len(feature_names)} features"
+    )
     best_val = math.inf
     for epoch in range(1, EPOCHS + 1):
         model.train()

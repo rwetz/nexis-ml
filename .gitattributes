@@ -1,0 +1,6 @@
+# Normalize line endings to LF in the repo; checkout per platform default.
+* text=auto
+
+*.png binary
+*.pt binary
+*.ckpt binary

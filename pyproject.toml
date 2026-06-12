@@ -26,13 +26,14 @@ dependencies = []
 [project.optional-dependencies]
 # numpy isn't used directly, but torch warns on startup without it
 torch = ["torch>=2.6", "numpy"]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ruff"]
 
 [project.scripts]
 nexis-ml = "nexis_ml.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/rwetz/nexis-ml"
+Issues = "https://github.com/rwetz/nexis-ml/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/nexis_ml"]

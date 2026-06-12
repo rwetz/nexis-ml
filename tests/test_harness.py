@@ -20,7 +20,11 @@ def events_of(buf):
 def test_full_run_lifecycle(tmp_path):
     em, buf = emitter()
     with track(
-        "demo", config={"lr": 0.1}, project_dir=str(tmp_path), total_epochs=2, emitter=em
+        "demo",
+        config={"lr": 0.1},
+        project_dir=str(tmp_path),
+        total_epochs=2,
+        emitter=em,
     ) as run:
         for epoch in (1, 2):
             run.log({"loss/train": 1.0 / epoch}, epoch=epoch)
