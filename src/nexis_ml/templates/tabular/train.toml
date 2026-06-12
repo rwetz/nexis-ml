@@ -1,0 +1,15 @@
+# Hyperparameters for train.py. Edit and re-run `nexis-ml train`.
+
+[data]
+path = "data/example.csv"   # CSV with a header row
+target = "label"            # column to predict; the rest are features
+
+[model]
+hidden = [32, 16]           # hidden layer sizes of the MLP
+
+[train]
+epochs = 15
+batch_size = 32
+lr = 0.01
+val_split = 0.2
+seed = 42

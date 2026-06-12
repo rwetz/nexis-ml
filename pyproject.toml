@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nexis-ml"
+version = "0.1.0"
+description = "Hobby-grade ML engine for the Nexis terminal - train small models on small data and stream live metrics."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+authors = [{ name = "Ryan Wetzstein" }]
+keywords = ["nexis", "machine-learning", "pytorch", "experiment-tracking"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# Core is stdlib-only by design: the protocol, run store, harness, and CLI
+# must work without torch so detection/replay/runs stay instant. Templates
+# are what need the heavy framework - hence the extra.
+dependencies = []
+
+[project.optional-dependencies]
+torch = ["torch>=2.6"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+nexis-ml = "nexis_ml.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/rwetz/nexis-ml"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nexis_ml"]

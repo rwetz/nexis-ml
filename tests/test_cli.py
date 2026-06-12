@@ -1,0 +1,62 @@
+import csv
+import json
+
+from nexis_ml import cli
+
+
+def test_new_scaffolds_tabular(tmp_path, capsys):
+    dest = tmp_path / "proj"
+    assert cli.main(["new", "tabular", str(dest)]) == 0
+    assert (dest / "train.py").is_file()
+    assert (dest / "train.toml").is_file()
+    assert (dest / "README.md").is_file()
+    with open(dest / "data" / "example.csv", newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    assert len(rows) == 240
+    assert set(rows[0]) == {"x1", "x2", "noise", "label"}
+    assert {r["label"] for r in rows} == {"0", "1"}
+
+
+def test_new_refuses_nonempty_dir(tmp_path, capsys):
+    dest = tmp_path / "proj"
+    dest.mkdir()
+    (dest / "precious.txt").write_text("do not clobber")
+    assert cli.main(["new", "tabular", str(dest)]) == 1
+    assert (dest / "precious.txt").read_text() == "do not clobber"
+    assert "not empty" in capsys.readouterr().err
+
+
+def test_train_without_project_errors(tmp_path, capsys):
+    assert cli.main(["train", str(tmp_path)]) == 1
+    assert "no train.py" in capsys.readouterr().err
+
+
+def test_runs_json_empty(tmp_path, capsys):
+    assert cli.main(["runs", str(tmp_path), "--json"]) == 0
+    assert json.loads(capsys.readouterr().out) == []
+
+
+def test_replay_re_emits_events(tmp_path, capsys):
+    events = [
+        {"ev": "run.started", "run": "r", "totalEpochs": 1},
+        {"ev": "metric", "run": "r", "step": 1, "name": "loss/train", "value": 1.0},
+        {"ev": "run.finished", "run": "r", "status": "ok"},
+    ]
+    f = tmp_path / "metrics.jsonl"
+    f.write_text("\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8")
+
+    assert cli.main(["replay", str(f), "--delay", "0"]) == 0
+    out = [json.loads(line) for line in capsys.readouterr().out.strip().splitlines()]
+    assert out == events
+
+
+def test_replay_accepts_run_dir(tmp_path, capsys):
+    (tmp_path / "metrics.jsonl").write_text(
+        json.dumps({"ev": "log", "msg": "hi"}) + "\n", encoding="utf-8"
+    )
+    assert cli.main(["replay", str(tmp_path), "--delay", "0"]) == 0
+    assert json.loads(capsys.readouterr().out)["msg"] == "hi"
+
+
+def test_replay_missing_path_errors(tmp_path, capsys):
+    assert cli.main(["replay", str(tmp_path / "nope.jsonl")]) == 1
