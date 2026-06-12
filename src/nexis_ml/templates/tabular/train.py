@@ -14,7 +14,6 @@ import json
 import math
 import os
 import random
-import tomllib
 
 import torch
 from torch import nn
@@ -24,8 +23,7 @@ import nexis_ml
 # ── config (train.toml) ───────────────────────────────────────────────
 
 CONFIG_PATH = os.environ.get("NEXIS_ML_CONFIG", "train.toml")
-with open(CONFIG_PATH, "rb") as f:
-    cfg = tomllib.load(f)
+cfg = nexis_ml.load_config(CONFIG_PATH)
 
 data_cfg = cfg.get("data", {})
 train_cfg = cfg.get("train", {})

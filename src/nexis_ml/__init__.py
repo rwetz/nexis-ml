@@ -9,8 +9,9 @@ Public API for train.py scripts:
         run.epoch(1)
 """
 
+from .config import load_config
 from .harness import Run, track
 
 __version__ = "0.1.0"
 
-__all__ = ["track", "Run", "__version__"]
+__all__ = ["track", "Run", "load_config", "__version__"]
