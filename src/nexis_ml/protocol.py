@@ -1,3 +1,9 @@
+# ╔══════════════════════════════════════╗
+# ║  Ryan Wetzstein                      ║
+# ║  Nexis ML                            ║
+# ║  2026                                ║
+# ╚══════════════════════════════════════╝
+
 """Protocol v1 — NDJSON event stream over stdout.
 
 The contract with Nexis (canonical spec: ML_SUITE.md in the Nexis repo,

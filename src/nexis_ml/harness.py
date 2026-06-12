@@ -1,3 +1,9 @@
+# ╔══════════════════════════════════════╗
+# ║  Ryan Wetzstein                      ║
+# ║  Nexis ML                            ║
+# ║  2026                                ║
+# ╚══════════════════════════════════════╝
+
 """Training harness — the `nexis_ml.track()` API used inside train.py.
 
 Design rule from the spec: train.py is the user's file. The harness

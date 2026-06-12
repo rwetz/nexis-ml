@@ -1,3 +1,9 @@
+# ╔══════════════════════════════════════╗
+# ║  Ryan Wetzstein                      ║
+# ║  Nexis ML                            ║
+# ║  2026                                ║
+# ╚══════════════════════════════════════╝
+
 """Config loading shared by templates.
 
 Reads TOML tolerantly: Windows editors (Notepad, PowerShell's

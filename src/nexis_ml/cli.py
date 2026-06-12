@@ -1,3 +1,9 @@
+# ╔══════════════════════════════════════╗
+# ║  Ryan Wetzstein                      ║
+# ║  Nexis ML                            ║
+# ║  2026                                ║
+# ╚══════════════════════════════════════╝
+
 """nexis-ml CLI: new / train / runs / replay.
 
 Exit codes: 0 ok, 1 error, 130 cancelled (Ctrl+C). When --nexis-protocol

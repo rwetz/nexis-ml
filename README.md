@@ -16,12 +16,29 @@ poke at the checkpoint.
 ## Install
 
 ```sh
-pip install nexis-ml[torch]
+pip install nexis-ml[torch]          # into the active venv
+pipx install nexis-ml[torch]         # or: on PATH in every shell
 ```
 
 The core package is **stdlib-only** (detection, run listing, and replay
 stay instant); PyTorch is only needed to actually train, hence the
-extra.
+extra. (Inside Nexis you don't need any of this — the ML Lab panel
+installs the engine for you.)
+
+### GPU (NVIDIA)
+
+The default torch wheel is CPU-only. For CUDA, install torch from the
+PyTorch index first — `--force-reinstall` matters, pip won't otherwise
+swap a `+cpu` build for a `+cuXXX` build of the same version:
+
+```sh
+pip install torch --index-url https://download.pytorch.org/whl/cu130 --force-reinstall
+pip install nexis-ml[torch]
+```
+
+Then set `device = "gpu"` in `train.toml` — or leave the default
+`"auto"`, which uses the GPU only when the job is big enough to
+benefit. `nexis-ml env` shows what your install can do.
 
 ## Quick start
 
@@ -40,9 +57,10 @@ edit** — change the architecture, rerun, compare.
 
 | Command | What it does |
 |---|---|
-| `nexis-ml new <template> <dir>` | Scaffold a project (templates: `tabular`; planned: `image`, `textgen`) |
+| `nexis-ml new <template> [dir]` | Scaffold a project (templates: `tabular`; planned: `image`, `textgen`) |
 | `nexis-ml train [dir] [--config train.toml]` | Run the project's `train.py` |
 | `nexis-ml runs [dir] [--json]` | List runs with final metrics |
+| `nexis-ml env` | JSON capability report (torch version, CUDA, GPU name) |
 | `nexis-ml replay <run-dir> [--delay ms]` | Re-stream a finished run's event log (frontend dev tool) |
 
 Global flag `--nexis-protocol` (or `NEXIS_ML_PROTOCOL=1`) switches

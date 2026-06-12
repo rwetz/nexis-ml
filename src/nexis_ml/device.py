@@ -1,3 +1,9 @@
+# ╔══════════════════════════════════════╗
+# ║  Ryan Wetzstein                      ║
+# ║  Nexis ML                            ║
+# ║  2026                                ║
+# ╚══════════════════════════════════════╝
+
 """Device selection for training templates.
 
 "auto" picks the GPU only when the job is big enough to benefit: for a

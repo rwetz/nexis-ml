@@ -1,3 +1,9 @@
+# ╔══════════════════════════════════════╗
+# ║  Ryan Wetzstein                      ║
+# ║  Nexis ML                            ║
+# ║  2026                                ║
+# ╚══════════════════════════════════════╝
+
 """On-disk run store: <project>/.nexis-ml/runs/<run-id>/
 
   config.json    — config snapshot, written at run start
