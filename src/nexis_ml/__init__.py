@@ -10,8 +10,16 @@ Public API for train.py scripts:
 """
 
 from .config import load_config
+from .device import estimate_mlp_params, resolve_device
 from .harness import Run, track
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
-__all__ = ["track", "Run", "load_config", "__version__"]
+__all__ = [
+    "track",
+    "Run",
+    "load_config",
+    "resolve_device",
+    "estimate_mlp_params",
+    "__version__",
+]

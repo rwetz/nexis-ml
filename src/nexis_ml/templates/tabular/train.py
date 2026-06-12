@@ -102,15 +102,25 @@ std = X_train.std(dim=0).clamp_min(1e-8)
 X_train = (X_train - mean) / std
 X_val = (X_val - mean) / std
 
-# ── model ─────────────────────────────────────────────────────────────
+# ── device (cpu / gpu / auto) ─────────────────────────────────────────
 
 out_dim = len(classes) if classification else 1
+device, device_reason = nexis_ml.resolve_device(
+    train_cfg.get("device", "auto"),
+    n_rows=len(X_train),
+    n_params=nexis_ml.estimate_mlp_params(X.shape[1], HIDDEN, out_dim),
+)
+X_train, y_train = X_train.to(device), y_train.to(device)
+X_val, y_val = X_val.to(device), y_val.to(device)
+
+# ── model ─────────────────────────────────────────────────────────────
+
 layers, in_dim = [], X.shape[1]
 for h in HIDDEN:
     layers += [nn.Linear(in_dim, h), nn.ReLU()]
     in_dim = h
 layers.append(nn.Linear(in_dim, out_dim))
-model = nn.Sequential(*layers)
+model = nn.Sequential(*layers).to(device)
 
 loss_fn = nn.CrossEntropyLoss() if classification else nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=LR)
@@ -167,7 +177,10 @@ run_config = {
     "derived": {"features": feature_names, "classes": classes, "task": task},
 }
 
-with nexis_ml.track("tabular", config=run_config, total_epochs=EPOCHS) as run:
+with nexis_ml.track(
+    "tabular", config=run_config, total_epochs=EPOCHS, device=str(device)
+) as run:
+    run.info(device_reason)
     run.info(
         f"{task}: {len(X_train)} train / {len(X_val)} val rows, "
         f"{len(feature_names)} features"

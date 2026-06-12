@@ -65,6 +65,11 @@ def main(argv: list[str] | None = None) -> int:
     p_runs.add_argument("dir", nargs="?", default=".")
     p_runs.add_argument("--json", action="store_true", dest="as_json")
 
+    sub.add_parser(
+        "env",
+        help="report python / torch / CUDA capabilities as one JSON line",
+    )
+
     p_replay = sub.add_parser(
         "replay",
         help="re-emit a finished run's event log as live protocol output "
@@ -89,6 +94,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_runs(args)
         if args.command == "replay":
             return _cmd_replay(args)
+        if args.command == "env":
+            return _cmd_env()
     except KeyboardInterrupt:
         return 130
     return 2
@@ -163,6 +170,29 @@ def _cmd_runs(args: argparse.Namespace) -> int:
         if parts:
             line += "  " + "  ".join(parts)
         print(line)
+    return 0
+
+
+def _cmd_env() -> int:
+    """Machine-readable capability report (Nexis shows a GPU chip off
+    this). Works without torch installed — fields just come back null."""
+    info: dict[str, object] = {
+        "python": sys.version.split()[0],
+        "nexisMl": __version__,
+        "torch": None,
+        "cudaAvailable": False,
+        "gpuName": None,
+    }
+    try:
+        import torch  # noqa: PLC0415 — deliberate: torch is optional
+
+        info["torch"] = torch.__version__
+        if torch.cuda.is_available():
+            info["cudaAvailable"] = True
+            info["gpuName"] = torch.cuda.get_device_name(0)
+    except Exception:  # noqa: BLE001 — any torch failure means "no torch"
+        pass
+    print(json.dumps(info))
     return 0
 
 

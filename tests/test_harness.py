@@ -91,6 +91,15 @@ def test_exception_marks_run_error_and_reraises(tmp_path):
     assert json.loads((run_dir / "summary.json").read_text())["status"] == "error"
 
 
+def test_device_recorded_in_started_event_and_summary(tmp_path):
+    em, buf = emitter()
+    with track("demo", project_dir=str(tmp_path), emitter=em, device="cuda:0"):
+        pass
+    events = events_of(buf)
+    assert events[0]["device"] == "cuda:0"
+    assert events[-1]["summary"]["device"] == "cuda:0"
+
+
 def test_artifact_and_sample_events(tmp_path):
     em, buf = emitter()
     with track("demo", project_dir=str(tmp_path), emitter=em) as run:

@@ -54,11 +54,13 @@ class Run:
         run_dir: run_store.RunDir,
         total_epochs: int | None,
         emitter: ProtocolEmitter,
+        device: str | None = None,
     ):
         self.name = name
         self.config = config or {}
         self.dir = run_dir
         self.total_epochs = total_epochs
+        self.device = device
         self._emitter = emitter
         self._step = 0
         self._epoch: int | None = None
@@ -181,6 +183,7 @@ class Run:
             dir=os.path.abspath(self.dir.path),
             config=self.config,
             totalEpochs=self.total_epochs,
+            device=self.device,
             protocol=PROTOCOL_VERSION,
             startedAt=self._started_at,
         )
@@ -195,6 +198,7 @@ class Run:
             "finishedAt": _now(),
             "totalEpochs": self.total_epochs,
             "lastEpoch": self._epoch,
+            "device": self.device,
             "metrics": self._stats,
             "artifacts": self._artifacts,
         }
@@ -238,13 +242,14 @@ def track(
     project_dir: str = ".",
     total_epochs: int | None = None,
     emitter: ProtocolEmitter | None = None,
+    device: str | None = None,
 ) -> Iterator[Run]:
     """Open a tracked run: allocates the run dir, emits run.started,
     and guarantees a run.finished + summary.json on every exit path
     (ok / cancelled / error)."""
     emitter = emitter if emitter is not None else ProtocolEmitter()
     run_dir = run_store.new_run_dir(project_dir, name)
-    run = Run(name, config, run_dir, total_epochs, emitter)
+    run = Run(name, config, run_dir, total_epochs, emitter, device=device)
     if emitter.enabled:
         _start_stdin_watcher(run)
     run._start()

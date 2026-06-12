@@ -13,3 +13,5 @@ batch_size = 32
 lr = 0.01
 val_split = 0.2
 seed = 42
+device = "auto"             # auto | cpu | gpu — auto uses the GPU only
+                            # when the job is big enough to benefit

@@ -13,6 +13,7 @@ messages arrive as JSON lines on stdin.
 ```jsonc
 { "ev": "run.started",  "run": "2026-06-12-0931-tabular", "name": "tabular",
   "dir": "...", "config": { /* hyperparams */ }, "totalEpochs": 15,
+  "device": "cuda:0",  // or "cpu"; null when the template doesn't report it
   "protocol": 1, "startedAt": "..." }
 { "ev": "metric",       "run": "…", "step": 120, "epoch": 1, "name": "loss/train", "value": 0.482 }
 { "ev": "epoch",        "run": "…", "epoch": 1, "of": 15 }
