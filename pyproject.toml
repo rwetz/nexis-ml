@@ -4,7 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "nexis-ml"
-version = "0.1.0"
+# Single-sourced from src/nexis_ml/__init__.py (__version__)
+dynamic = ["version"]
 description = "Hobby-grade ML engine for the Nexis terminal - train small models on small data and stream live metrics."
 readme = "README.md"
 license = "Apache-2.0"
@@ -34,6 +35,9 @@ nexis-ml = "nexis_ml.cli:main"
 [project.urls]
 Homepage = "https://github.com/rwetz/nexis-ml"
 Issues = "https://github.com/rwetz/nexis-ml/issues"
+
+[tool.hatch.version]
+path = "src/nexis_ml/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/nexis_ml"]
