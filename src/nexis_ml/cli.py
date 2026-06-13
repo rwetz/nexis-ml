@@ -19,8 +19,8 @@ import runpy
 import sys
 import time
 
-from . import __version__, run_store
-from .protocol import ENV_FLAG, ProtocolEmitter
+from . import __version__, inference, run_store
+from .protocol import ENV_FLAG, PROTOCOL_VERSION, ProtocolEmitter
 from .templates import TEMPLATES, scaffold
 
 
@@ -67,6 +67,37 @@ def main(argv: list[str] | None = None) -> int:
         "--nexis-protocol", action="store_true", default=argparse.SUPPRESS
     )
 
+    p_infer = sub.add_parser("infer", help="one-shot inference from a checkpoint")
+    p_infer.add_argument("dir", nargs="?", default=".")
+    p_infer.add_argument(
+        "--run", required=True, help="run id, run dir, or checkpoint path"
+    )
+    p_infer.add_argument(
+        "--input",
+        default=None,
+        help="prompt (textgen) or JSON of feature values (tabular)",
+    )
+    p_infer.add_argument("--checkpoint", default="best", choices=["best", "last"])
+    p_infer.add_argument("--max-new", type=int, default=200, dest="max_new")
+    p_infer.add_argument("--temperature", type=float, default=0.8)
+    p_infer.add_argument(
+        "--nexis-protocol", action="store_true", default=argparse.SUPPRESS
+    )
+
+    p_serve = sub.add_parser(
+        "serve",
+        help="inference loop: one JSON request per stdin line → one "
+        "NDJSON response per stdout line",
+    )
+    p_serve.add_argument("dir", nargs="?", default=".")
+    p_serve.add_argument(
+        "--run", required=True, help="run id, run dir, or checkpoint path"
+    )
+    p_serve.add_argument("--checkpoint", default="best", choices=["best", "last"])
+    p_serve.add_argument(
+        "--nexis-protocol", action="store_true", default=argparse.SUPPRESS
+    )
+
     p_runs = sub.add_parser("runs", help="list runs in a project")
     p_runs.add_argument("dir", nargs="?", default=".")
     p_runs.add_argument("--json", action="store_true", dest="as_json")
@@ -96,6 +127,10 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_new(args)
         if args.command == "train":
             return _cmd_train(args)
+        if args.command == "infer":
+            return _cmd_infer(args)
+        if args.command == "serve":
+            return _cmd_serve(args)
         if args.command == "runs":
             return _cmd_runs(args)
         if args.command == "replay":
@@ -154,6 +189,118 @@ def _cmd_train(args: argparse.Namespace) -> int:
             sys.path.remove(project)
         except ValueError:
             pass
+    return 0
+
+
+def _load_predictor_or_report(args: argparse.Namespace, report):
+    """Resolve the run + load its predictor, or call `report(msg)` and
+    return None. Shared by infer (stderr) and serve (NDJSON error)."""
+    project = os.path.abspath(args.dir)
+    try:
+        run_dir = inference.resolve_run_dir(project, args.run)
+        predictor = inference.load_predictor(run_dir, args.checkpoint)
+    except ImportError:
+        report("torch is not installed — run: pip install nexis-ml[torch]")
+        return None
+    except (FileNotFoundError, ValueError, RuntimeError) as e:
+        report(str(e))
+        return None
+    return os.path.basename(run_dir), predictor
+
+
+def _infer_request(template: str, args: argparse.Namespace) -> dict | None:
+    if template == "textgen":
+        return {
+            "input": args.input or "",
+            "maxNew": args.max_new,
+            "temperature": args.temperature,
+        }
+    # tabular: --input must be a JSON object of feature: value
+    if not args.input:
+        print(
+            "error: tabular infer needs --input as JSON, e.g. --input '{\"x1\": 0.5}'",
+            file=sys.stderr,
+        )
+        return None
+    try:
+        obj = json.loads(args.input)
+    except json.JSONDecodeError:
+        print("error: --input must be valid JSON for a tabular model", file=sys.stderr)
+        return None
+    return {"input": obj}
+
+
+def _print_prediction(template: str, result: dict) -> None:
+    if template == "textgen":
+        print(result.get("output", ""))
+        return
+    out = result.get("output", {})
+    if "label" in out:
+        print(f"prediction: {out['label']}")
+        probs = out.get("probs", {})
+        for cls, p in sorted(probs.items(), key=lambda kv: -kv[1]):
+            print(f"  {cls}: {p:.3f}")
+    else:
+        print(f"prediction: {out.get('value')}")
+
+
+def _cmd_infer(args: argparse.Namespace) -> int:
+    loaded = _load_predictor_or_report(
+        args, lambda m: print(f"error: {m}", file=sys.stderr)
+    )
+    if loaded is None:
+        return 1
+    run_id, predictor = loaded
+    request = _infer_request(predictor.template, args)
+    if request is None:
+        return 1
+    try:
+        result = predictor.predict(request)
+    except (ValueError, KeyError, RuntimeError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    emitter = ProtocolEmitter()
+    if emitter.enabled:
+        emitter.emit("prediction", run=run_id, template=predictor.template, **result)
+    else:
+        _print_prediction(predictor.template, result)
+    return 0
+
+
+def _cmd_serve(args: argparse.Namespace) -> int:
+    # serve speaks NDJSON unconditionally — it's a machine interface even
+    # in a plain terminal (one JSON request per line in, one event out).
+    emitter = ProtocolEmitter(enabled=True)
+    loaded = _load_predictor_or_report(args, lambda m: emitter.emit("error", msg=m))
+    if loaded is None:
+        return 1
+    run_id, predictor = loaded
+    emitter.emit(
+        "ready",
+        run=run_id,
+        template=predictor.template,
+        device=predictor.device,
+        meta=getattr(predictor, "meta", {}),
+        protocol=PROTOCOL_VERSION,
+    )
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            request = json.loads(line)
+        except json.JSONDecodeError:
+            emitter.emit("error", msg="request is not valid JSON")
+            continue
+        if not isinstance(request, dict):
+            emitter.emit("error", msg="request must be a JSON object")
+            continue
+        try:
+            result = predictor.predict(request)
+        except (ValueError, KeyError, RuntimeError) as e:
+            emitter.emit("error", msg=str(e))
+            continue
+        emitter.emit("prediction", **result)
     return 0
 
 

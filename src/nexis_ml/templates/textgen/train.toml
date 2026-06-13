@@ -1,0 +1,26 @@
+# Hyperparameters for train.py. Edit and re-run `nexis-ml train`.
+
+[data]
+path = "data/input.txt"     # any UTF-8 .txt file — swap in your own
+
+[model]
+context = 128               # characters of history the model sees at once
+embed = 128                 # model width (must divide evenly by heads)
+heads = 4                   # attention heads
+layers = 4                  # transformer blocks
+dropout = 0.1
+
+[train]
+epochs = 20
+steps_per_epoch = 200       # training batches per pass
+batch_size = 32
+lr = 0.003
+val_split = 0.1
+seed = 42
+device = "auto"             # auto | cpu | gpu — a transformer is real work,
+                            # so auto will reach for the GPU when you have one
+
+[sample]
+length = 240                # characters to generate after each pass
+temperature = 0.8           # >1 = wilder & more varied, <1 = safer & repetitive
+prime = "\n"                # seed text the sample starts from

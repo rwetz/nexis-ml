@@ -33,6 +33,40 @@ messages arrive as JSON lines on stdin.
 
 (`pause` / `resume` reserved for later.)
 
+## Inference: `serve` (request/response over stdio)
+
+`nexis-ml serve --run <id>` loads a checkpoint and runs an
+inference loop: **one JSON request per stdin line, one NDJSON event per
+stdout line.** Unlike training, serve speaks NDJSON unconditionally (it's
+a machine interface). It opens with a `ready` event, then answers each
+request until stdin closes.
+
+```jsonc
+// engine → Nexis (stdout)
+{ "ev": "ready", "run": "…", "template": "textgen", "device": "cuda", "protocol": 1,
+  "meta": { "vocab": 42, "context": 128 } }   // tabular: { "features": [...], "classes": [...], "task": "classification" }
+
+// Nexis → engine (stdin), then engine → Nexis (stdout):
+//  textgen — request: { "input": "Once upon a time", "maxNew": 200, "temperature": 0.8 }
+{ "ev": "prediction", "input": "Once upon a time", "output": "Once upon a time …",
+  "continuation": " …" }              // output minus the echoed prompt
+
+//  tabular — request: { "input": { "x1": 0.5, "x2": -0.2 } }   (missing features → training mean)
+{ "ev": "prediction", "input": { … },
+  "output": { "label": "1", "probs": { "0": 0.24, "1": 0.76 } } }  // regression: { "value": … }
+
+{ "ev": "error", "msg": "request is not valid JSON" }   // bad request / bad checkpoint; loop continues
+```
+
+`nexis-ml infer --run <id> --input …` is the one-shot form: it prints a
+human-readable prediction, or (under `--nexis-protocol`) emits a single
+`prediction` event and exits.
+
+The built-in predictors rebuild the shipped template architecture from
+the **sizes saved in the checkpoint** — so changing a size in train.toml
+is supported, but editing the model *code* in train.py may no longer
+match (reported as an `error`, not a crash).
+
 ## Rules
 
 - Unknown `ev` types are ignored by the client; unknown fields are

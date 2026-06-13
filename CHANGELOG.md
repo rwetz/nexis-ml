@@ -3,6 +3,32 @@
 All notable changes to nexis-ml. Versions follow [SemVer](https://semver.org/);
 pre-1.0, minor bumps may change the CLI or harness API.
 
+## [0.4.0] — 2026-06-13
+
+### Added
+- **Inference** — `nexis-ml infer` (one-shot) and `nexis-ml serve` (a
+  stdin/stdout request→response loop, NDJSON). Both load a run's
+  `checkpoints/best.pt` (or `last`) and predict: text continuation for
+  `textgen`, class + probabilities for `tabular`. `serve` opens with a
+  `ready` event (template + device), then answers one JSON request per
+  line — this is what the Nexis ML Lab playground drives. `--run` accepts
+  a run id, a run dir, or a checkpoint path.
+- The built-in predictors rebuild a template's model from the **sizes
+  saved in the checkpoint**, so tweaking sizes in `train.toml` still
+  works; editing the model *code* is reported clearly instead of
+  crashing. See `inference.py` and PROTOCOL.md.
+
+## [0.3.0] — 2026-06-13
+
+### Added
+- **`textgen` template** — a char-level tiny GPT (`nexis-ml new textgen`).
+  Trains a small hand-rolled transformer on any UTF-8 `.txt` file and,
+  after every pass, emits a `sample` event with freshly generated text —
+  the "watch gibberish become words" demo. Ships with a short bundled
+  corpus (`data/input.txt`) and streams `loss/train`, `loss/val`, and
+  `perplexity/val`. Best/last checkpoints embed the vocabulary so a
+  future `infer`/`serve` can decode without the training text.
+
 ## [0.2.0] — 2026-06-12
 
 ### Added

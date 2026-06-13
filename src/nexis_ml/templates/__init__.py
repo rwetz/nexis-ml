@@ -20,7 +20,7 @@ import shutil
 from importlib import resources
 from importlib.resources.abc import Traversable
 
-TEMPLATES = {"tabular"}
+TEMPLATES = {"tabular", "textgen"}
 
 
 def scaffold(template: str, dest: str, force: bool = False) -> str:

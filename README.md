@@ -47,6 +47,15 @@ nexis-ml new tabular my-experiment
 cd my-experiment
 nexis-ml train
 nexis-ml runs
+nexis-ml infer --run <run-id> --input '{"x1": 0.5, "x2": -0.2}'   # predict from the checkpoint
+```
+
+Or train a tiny text model and watch it write:
+
+```sh
+nexis-ml new textgen tiny-writer && cd tiny-writer
+nexis-ml train
+nexis-ml infer --run <run-id> --input "Once upon a time"
 ```
 
 `new` scaffolds a project with example data (two half-moons), a
@@ -57,8 +66,10 @@ edit** — change the architecture, rerun, compare.
 
 | Command | What it does |
 |---|---|
-| `nexis-ml new <template> [dir]` | Scaffold a project (templates: `tabular`; planned: `image`, `textgen`) |
+| `nexis-ml new <template> [dir]` | Scaffold a project (templates: `tabular`, `textgen`; planned: `image`) |
 | `nexis-ml train [dir] [--config train.toml]` | Run the project's `train.py` |
+| `nexis-ml infer --run <id> [--input …]` | One-shot prediction from a checkpoint (text for `textgen`, class for `tabular`) |
+| `nexis-ml serve --run <id>` | Inference loop: one JSON request per stdin line → one NDJSON response (drives the ML Lab playground) |
 | `nexis-ml runs [dir] [--json]` | List runs with final metrics |
 | `nexis-ml env` | JSON capability report (torch version, CUDA, GPU name) |
 | `nexis-ml replay <run-dir> [--delay ms]` | Re-stream a finished run's event log (frontend dev tool) |
