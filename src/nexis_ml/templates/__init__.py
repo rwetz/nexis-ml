@@ -17,10 +17,12 @@ import math
 import os
 import random
 import shutil
+import struct
+import zlib
 from importlib import resources
 from importlib.resources.abc import Traversable
 
-TEMPLATES = {"tabular", "textgen"}
+TEMPLATES = {"tabular", "textgen", "image"}
 
 
 def scaffold(template: str, dest: str, force: bool = False) -> str:
@@ -79,4 +81,68 @@ def _tabular_example_data(dest: str) -> None:
             f.write(f"{x1:.5f},{x2:.5f},{nz:.5f},{label}\n")
 
 
-_EXTRAS = {"tabular": _tabular_example_data}
+def _png_gray(width: int, height: int, pixels: bytes) -> bytes:
+    """Encode an 8-bit grayscale PNG with the stdlib only (zlib + struct).
+
+    Lets `nexis-ml new image` generate example images without pulling in
+    Pillow — scaffolding stays dependency-free; only training (train.py)
+    needs the image library.
+    """
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(data))
+            + tag
+            + data
+            + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+        )
+
+    raw = bytearray()
+    for y in range(height):
+        raw.append(0)  # filter type 0 (none) per scanline
+        raw.extend(pixels[y * width : (y + 1) * width])
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 0, 0, 0, 0)  # 8-bit grayscale
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", ihdr)
+        + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+        + chunk(b"IEND", b"")
+    )
+
+
+def _image_example_data(dest: str) -> None:
+    """Four visually distinct pattern classes (horizontal / vertical /
+    diagonal stripes + checkerboard), as folders of small grayscale PNGs.
+    Deterministic, stdlib-only, and easy for a tiny CNN to separate so the
+    sample grid looks right within a few epochs."""
+    rng = random.Random(7)
+    size = 24
+    classes = ["horizontal", "vertical", "diagonal", "checker"]
+    data_dir = os.path.join(dest, "data")
+    for cls in classes:
+        cdir = os.path.join(data_dir, cls)
+        os.makedirs(cdir, exist_ok=True)
+        for i in range(36):
+            period = rng.choice([3, 4, 5])
+            phase = rng.randint(0, period - 1)
+            cell = rng.choice([2, 3, 4])
+            on_w = max(1, period // 2)
+            px = bytearray(size * size)
+            for y in range(size):
+                for x in range(size):
+                    if cls == "horizontal":
+                        on = (y + phase) % period < on_w
+                    elif cls == "vertical":
+                        on = (x + phase) % period < on_w
+                    elif cls == "diagonal":
+                        on = (x + y + phase) % period < on_w
+                    else:  # checker
+                        on = ((x // cell) + (y // cell)) % 2 == 0
+                    base = 220 if on else 30
+                    val = int(base + rng.gauss(0.0, 18.0))
+                    px[y * size + x] = max(0, min(255, val))
+            with open(os.path.join(cdir, f"img_{i:03d}.png"), "wb") as f:
+                f.write(_png_gray(size, size, bytes(px)))
+
+
+_EXTRAS = {"tabular": _tabular_example_data, "image": _image_example_data}

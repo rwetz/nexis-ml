@@ -66,7 +66,7 @@ edit** — change the architecture, rerun, compare.
 
 | Command | What it does |
 |---|---|
-| `nexis-ml new <template> [dir]` | Scaffold a project (templates: `tabular`, `textgen`; planned: `image`) |
+| `nexis-ml new <template> [dir]` | Scaffold a project (templates: `tabular`, `textgen`, `image`) |
 | `nexis-ml train [dir] [--config train.toml]` | Run the project's `train.py` |
 | `nexis-ml infer --run <id> [--input …]` | One-shot prediction from a checkpoint (text for `textgen`, class for `tabular`) |
 | `nexis-ml serve --run <id>` | Inference loop: one JSON request per stdin line → one NDJSON response (drives the ML Lab playground) |

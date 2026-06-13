@@ -42,6 +42,20 @@ def test_new_scaffolds_textgen(tmp_path, capsys):
     assert len(corpus.read_text(encoding="utf-8")) > 1000
 
 
+def test_new_scaffolds_image_with_class_folders(tmp_path, capsys):
+    dest = tmp_path / "proj"
+    assert cli.main(["new", "image", str(dest)]) == 0
+    assert (dest / "train.py").is_file()
+    assert (dest / "train.toml").is_file()
+    data = dest / "data"
+    class_dirs = sorted(p.name for p in data.iterdir() if p.is_dir())
+    assert class_dirs == ["checker", "diagonal", "horizontal", "vertical"]
+    pngs = list((data / "horizontal").glob("*.png"))
+    assert len(pngs) == 36
+    # Generated with the stdlib PNG writer — valid 8-bit grayscale signature.
+    assert pngs[0].read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
 def test_new_in_protocol_mode_keeps_stdout_clean(tmp_path, capsys, monkeypatch):
     monkeypatch.setenv("NEXIS_ML_PROTOCOL", "1")
     dest = tmp_path / "proj"

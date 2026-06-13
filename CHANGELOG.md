@@ -3,6 +3,21 @@
 All notable changes to nexis-ml. Versions follow [SemVer](https://semver.org/);
 pre-1.0, minor bumps may change the CLI or harness API.
 
+## [0.5.0] — 2026-06-13
+
+### Added
+- **`image` template** — a small CNN over folders of images
+  (`nexis-ml new image`, one folder per class). Streams loss + accuracy,
+  writes a per-epoch confusion matrix and a **sample-prediction grid**
+  PNG (green border = correct, red = wrong). Ships four bundled pattern
+  classes generated with a stdlib-only PNG writer, so `new image` stays
+  dependency-free; training adds `Pillow` (now in the `torch` extra) for
+  image loading/saving.
+
+### Note
+- Image-model inference isn't in the playground yet; `infer`/`serve`
+  report this clearly rather than mis-loading the checkpoint.
+
 ## [0.4.0] — 2026-06-13
 
 ### Added

@@ -25,8 +25,9 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-# numpy isn't used directly, but torch warns on startup without it
-torch = ["torch>=2.6", "numpy"]
+# numpy isn't used directly, but torch warns on startup without it.
+# Pillow loads/saves images for the `image` template (and its sample grid).
+torch = ["torch>=2.6", "numpy", "Pillow>=10"]
 dev = ["pytest>=8", "ruff"]
 
 [project.scripts]

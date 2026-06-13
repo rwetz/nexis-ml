@@ -299,6 +299,11 @@ def load_predictor(run_dir: str, which: str = "best"):
         raise ValueError(f"unrecognized checkpoint at {ckpt_path}")
     if "stoi" in ckpt and "itos" in ckpt:
         return TextgenPredictor(ckpt)
+    if "img_size" in ckpt:
+        raise ValueError(
+            "image-model inference isn't in the playground yet — watch the "
+            "sample-prediction grid during training instead"
+        )
     if "features" in ckpt and "classes" in ckpt:
         return TabularPredictor(ckpt)
     raise ValueError(

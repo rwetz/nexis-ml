@@ -1,0 +1,20 @@
+# Hyperparameters for train.py. Edit and re-run `nexis-ml train`.
+
+[data]
+path = "data"               # a folder of <class>/ subfolders of images
+
+[model]
+conv1 = 16                  # filters in the first conv layer
+conv2 = 32                  # filters in the second conv layer
+hidden = 64                 # size of the dense layer before the output
+
+[train]
+epochs = 12
+batch_size = 16
+lr = 0.002
+val_split = 0.2
+seed = 42
+device = "auto"             # auto | cpu | gpu
+
+[sample]
+grid = 16                   # images in the per-epoch sample-prediction grid
