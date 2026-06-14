@@ -3,6 +3,17 @@
 All notable changes to nexis-ml. Versions follow [SemVer](https://semver.org/);
 pre-1.0, minor bumps may change the CLI or harness API.
 
+## [0.6.0] — 2026-06-13
+
+### Added
+- **`run.should_stop(...)`** — an early-stopping helper in the harness.
+  Call it once per eval; it returns True once the monitored metric hasn't
+  improved for `patience` evals (`mode="min"` for losses, `"max"` for
+  accuracy).
+- **GPU memory telemetry** — on a CUDA run the harness now emits a
+  `mem/gpu_mb` metric each epoch (current allocated MB), so the panel can
+  plot the GPU footprint. CPU runs are unaffected and stay torch-free.
+
 ## [0.5.0] — 2026-06-13
 
 ### Added

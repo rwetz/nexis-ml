@@ -106,6 +106,35 @@ def test_device_recorded_in_started_event_and_summary(tmp_path):
     assert events[-1]["summary"]["device"] == "cuda:0"
 
 
+def test_should_stop_after_patience_without_improvement(tmp_path):
+    em, _ = emitter()
+    with track("demo", project_dir=str(tmp_path), emitter=em) as run:
+        # Improving losses → never stop.
+        for v in (1.0, 0.8, 0.6):
+            run.log({"loss/val": v})
+            assert run.should_stop(patience=2) is False
+        # Now plateau: two non-improving evals trip patience=2.
+        run.log({"loss/val": 0.61})
+        assert run.should_stop(patience=2) is False  # wait = 1
+        run.log({"loss/val": 0.62})
+        assert run.should_stop(patience=2) is True  # wait = 2
+
+
+def test_should_stop_max_mode_for_accuracy(tmp_path):
+    em, _ = emitter()
+    with track("demo", project_dir=str(tmp_path), emitter=em) as run:
+        run.log({"acc/val": 0.5})
+        assert run.should_stop("acc/val", patience=1, mode="max") is False
+        run.log({"acc/val": 0.49})  # no improvement
+        assert run.should_stop("acc/val", patience=1, mode="max") is True
+
+
+def test_should_stop_is_false_until_metric_seen(tmp_path):
+    em, _ = emitter()
+    with track("demo", project_dir=str(tmp_path), emitter=em) as run:
+        assert run.should_stop("loss/val", patience=1) is False
+
+
 def test_artifact_and_sample_events(tmp_path):
     em, buf = emitter()
     with track("demo", project_dir=str(tmp_path), emitter=em) as run:

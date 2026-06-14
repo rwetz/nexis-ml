@@ -74,6 +74,7 @@ class Run:
         self._stats: dict[str, dict[str, Any]] = {}
         self._artifacts: list[dict[str, str]] = []
         self._last_values: dict[str, float] = {}
+        self._early: dict[str, Any] = {}  # early-stopping state
         self._started_at = _now()
 
     # ── identity / paths ──────────────────────────────────────────────
@@ -140,11 +141,54 @@ class Run:
     def epoch(self, i: int) -> None:
         """Mark the end of epoch `i` (1-based)."""
         self._epoch = i
+        self._log_gpu_memory()
         event = self._emitter.emit("epoch", run=self.id, epoch=i, of=self.total_epochs)
         self.dir.append_event(event)
         of = f"/{self.total_epochs}" if self.total_epochs else ""
         latest = "  ".join(f"{k}={v:.4g}" for k, v in sorted(self._last_values.items()))
         self._console(f"epoch {i}{of}  {latest}")
+
+    def should_stop(
+        self,
+        metric: str = "loss/val",
+        patience: int = 5,
+        mode: str = "min",
+        min_delta: float = 0.0,
+    ) -> bool:
+        """Early-stopping check — call once per eval (per epoch). Returns
+        True once `metric` hasn't improved for `patience` consecutive
+        calls. `mode="min"` for losses, `"max"` for accuracy. Reads the
+        latest value logged via `log()`, so log the metric first:
+
+            run.log({"loss/val": v}, epoch=epoch)
+            if run.should_stop(patience=3):
+                break
+        """
+        value = self._last_values.get(metric)
+        if value is None:
+            return False
+        best = self._early.get("best")
+        if best is None or (
+            value < best - min_delta if mode == "min" else value > best + min_delta
+        ):
+            self._early["best"] = value
+            self._early["wait"] = 0
+        else:
+            self._early["wait"] = self._early.get("wait", 0) + 1
+        return self._early.get("wait", 0) >= patience
+
+    def _log_gpu_memory(self) -> None:
+        """Emit a `mem/gpu_mb` metric when training on CUDA, so the panel
+        can plot the GPU footprint. No-op (and torch-free) otherwise."""
+        if not self.device or "cuda" not in str(self.device):
+            return
+        try:
+            import torch  # noqa: PLC0415 — only reached on a CUDA run
+
+            mb = torch.cuda.memory_allocated() / (1024 * 1024)
+        except Exception:  # noqa: BLE001 — never let telemetry break a run
+            return
+        self.log({"mem/gpu_mb": mb}, epoch=self._epoch)
 
     def artifact(self, kind: str, path: str | os.PathLike[str]) -> None:
         # Absolute so Nexis never has to guess the base directory

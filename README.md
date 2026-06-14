@@ -100,9 +100,14 @@ with nexis_ml.track("my-run", config=cfg, total_epochs=10) as run:
         run.log({"loss/train": loss.item()}, epoch=epoch)   # per batch
         run.epoch(epoch)                                    # epoch boundary
         run.artifact("confusion-matrix", path)              # generated files
+        if run.should_stop(patience=5):                     # early stopping
+            break
         if run.cancelled:                                   # Nexis "Cancel" / Ctrl+C
             break
 ```
+
+On a CUDA run the harness also emits a `mem/gpu_mb` metric each epoch so
+the GPU footprint shows up alongside your curves.
 
 A `run.finished` event and `summary.json` are guaranteed on every exit
 path (ok / cancelled / error).
