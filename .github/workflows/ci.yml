@@ -32,3 +32,19 @@ jobs:
       # Core is stdlib-only; tests run without torch by design.
       - run: pip install -e .[dev]
       - run: pytest -q
+
+  # Catch packaging regressions (missing template data, bad metadata)
+  # before a release ever runs publish.yml.
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: python -m pip install build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      # The textgen corpus must ship in the wheel (image example data is
+      # generated at scaffold time, so it's intentionally absent here).
+      - run: python -c "import zipfile,glob,sys; n=zipfile.ZipFile(glob.glob('dist/*.whl')[0]).namelist(); sys.exit(0 if 'nexis_ml/templates/textgen/data/input.txt' in n else 'corpus missing from wheel')"

@@ -12,6 +12,12 @@ pre-1.0, minor bumps may change the CLI or harness API.
   text samples, and the config). No torch/network/external assets, so it
   opens and shares anywhere. Defaults to `<run>/report.html`.
 
+### Changed
+- Release/packaging hardening: `publish.yml` now runs `twine check`, CI
+  gained a `package` job (build + `twine check` + a guard that the
+  textgen corpus ships in the wheel), and `pytest` is pinned to `tests/`.
+  See README "Publishing" for the one-time PyPI trusted-publisher setup.
+
 ## [0.6.0] — 2026-06-13
 
 ### Added

@@ -42,3 +42,8 @@ path = "src/nexis_ml/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/nexis_ml"]
+
+[tool.pytest.ini_options]
+# Only collect the real suite — keep scratch/ demo projects out of a
+# bare `pytest` run (they aren't tests and some call sys.exit()).
+testpaths = ["tests"]

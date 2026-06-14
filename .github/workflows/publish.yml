@@ -1,9 +1,13 @@
 # Publishes to PyPI when a GitHub Release is published.
 #
 # Uses PyPI "trusted publishing" (OIDC) — no API token is stored in the
-# repo. One-time setup required on PyPI before the first publish:
-#   pypi.org → Manage → Publishing → add GitHub publisher
-#   (owner: rwetz, repo: nexis-ml, workflow: publish.yml, env: pypi)
+# repo. One-time setup required on PyPI before the first publish (see
+# README "Publishing"):
+#   pypi.org → Publishing → add a pending GitHub publisher
+#   (PyPI project: nexis-ml, owner: rwetz, repo: nexis-ml,
+#    workflow: publish.yml, environment: pypi)
+# Also create a GitHub environment named "pypi" (repo → Settings →
+# Environments) — referenced by the publish job below.
 name: publish
 
 on:
@@ -18,8 +22,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - run: python -m pip install build
+      - run: python -m pip install build twine
       - run: python -m build
+      - run: python -m twine check dist/*
       - uses: actions/upload-artifact@v4
         with:
           name: dist

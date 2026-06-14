@@ -125,6 +125,32 @@ ruff check src tests && ruff format --check src tests
 
 The test suite needs no torch — core stays framework-free by design.
 
+## Publishing
+
+Releases go to PyPI via **trusted publishing** (OIDC) — no API token is
+stored. `publish.yml` runs on a published GitHub Release; CI's `package`
+job builds + `twine check`s on every push so packaging never breaks by
+surprise.
+
+One-time setup (manual, on the web):
+
+1. **PyPI** → *Publishing* → add a *pending publisher*: PyPI project
+   `nexis-ml`, owner `rwetz`, repo `nexis-ml`, workflow `publish.yml`,
+   environment `pypi`.
+2. **GitHub** → repo *Settings → Environments* → create an environment
+   named `pypi`.
+
+Cutting a release:
+
+1. Bump `__version__` in `src/nexis_ml/__init__.py` (single source) and
+   add a `CHANGELOG.md` entry.
+2. Tag and push: `git tag vX.Y.Z && git push --tags`.
+3. Create a GitHub Release for the tag → `publish.yml` builds and
+   uploads to PyPI automatically.
+
+Until the pending publisher exists on PyPI, the panel's install button
+only works where the engine is already reachable (e.g. `pip install -e`).
+
 ## License
 
 Apache-2.0, same as Nexis.
