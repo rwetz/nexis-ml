@@ -23,6 +23,7 @@ import os
 from typing import Any
 
 from . import __version__
+from .run_store import read_json  # shared file reader (was a local copy)
 
 
 def _read_jsonl(path: str) -> list[dict[str, Any]]:
@@ -39,14 +40,6 @@ def _read_jsonl(path: str) -> list[dict[str, Any]]:
             except json.JSONDecodeError:
                 continue
     return out
-
-
-def _read_json(path: str) -> Any | None:
-    try:
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, json.JSONDecodeError):
-        return None
 
 
 def _decimate(
@@ -108,6 +101,8 @@ def _svg_chart(name: str, steps: list[float], values: list[float]) -> str:
 
 
 def _confusion_table(cm: dict[str, Any]) -> str:
+    # Color math kept in sync with the live panel's cellColor
+    # (Nexis src/modules/ml/MlPanel.tsx) so the report and panel agree.
     labels = [str(x) for x in cm.get("labels", [])]
     matrix = cm.get("matrix", [])
     if not labels or not matrix:
@@ -171,8 +166,8 @@ footer{margin:2rem 0 1rem;font-size:11px;color:#aaa}
 def build_html_report(run_dir: str) -> str:
     run_id = os.path.basename(os.path.normpath(run_dir))
     events = _read_jsonl(os.path.join(run_dir, "metrics.jsonl"))
-    summary = _read_json(os.path.join(run_dir, "summary.json")) or {}
-    config = _read_json(os.path.join(run_dir, "config.json")) or {}
+    summary = read_json(os.path.join(run_dir, "summary.json")) or {}
+    config = read_json(os.path.join(run_dir, "config.json")) or {}
 
     series: dict[str, tuple[list[float], list[float]]] = {}
     samples: list[dict[str, Any]] = []
@@ -243,7 +238,7 @@ def build_html_report(run_dir: str) -> str:
         parts.append("</div>")
 
     if cm_path:
-        cm = _read_json(cm_path)
+        cm = read_json(cm_path)
         if isinstance(cm, dict):
             table = _confusion_table(cm)
             if table:

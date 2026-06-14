@@ -117,17 +117,19 @@ def list_runs(project_dir: str) -> list[dict[str, Any]]:
         if not os.path.isdir(path):
             continue
         info: dict[str, Any] = {"run": entry, "dir": path, "status": "unknown"}
-        config = _read_json(os.path.join(path, "config.json"))
+        config = read_json(os.path.join(path, "config.json"))
         if config is not None:
             info["config"] = config
-        summary = _read_json(os.path.join(path, "summary.json"))
+        summary = read_json(os.path.join(path, "summary.json"))
         if isinstance(summary, dict):
             info.update(summary)
         runs.append(info)
     return runs
 
 
-def _read_json(path: str) -> Any | None:
+def read_json(path: str) -> Any | None:
+    """Load a JSON file, or None on a missing/unreadable/invalid file.
+    Shared with report.py."""
     try:
         with open(path, encoding="utf-8") as f:
             return json.load(f)
