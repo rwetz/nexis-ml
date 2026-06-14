@@ -3,6 +3,15 @@
 All notable changes to nexis-ml. Versions follow [SemVer](https://semver.org/);
 pre-1.0, minor bumps may change the CLI or harness API.
 
+## [0.7.0] — 2026-06-13
+
+### Added
+- **`nexis-ml export --run <id>`** — writes a self-contained HTML report
+  for a run (inline SVG metric charts, a metrics summary, the confusion
+  matrix, the latest sample-prediction grid embedded as base64, generated
+  text samples, and the config). No torch/network/external assets, so it
+  opens and shares anywhere. Defaults to `<run>/report.html`.
+
 ## [0.6.0] — 2026-06-13
 
 ### Added

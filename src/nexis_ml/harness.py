@@ -71,6 +71,8 @@ class Run:
         self._step = 0
         self._epoch: int | None = None
         self._cancel = threading.Event()
+        self._resume = threading.Event()
+        self._resume.set()  # set = running, cleared = paused
         self._stats: dict[str, dict[str, Any]] = {}
         self._artifacts: list[dict[str, str]] = []
         self._last_values: dict[str, float] = {}
@@ -91,15 +93,38 @@ class Run:
     def artifacts_dir(self) -> str:
         return self.dir.artifacts_dir
 
-    # ── cancellation ──────────────────────────────────────────────────
+    # ── cancellation / pause ──────────────────────────────────────────
 
     @property
     def cancelled(self) -> bool:
         return self._cancel.is_set()
 
+    @property
+    def paused(self) -> bool:
+        return not self._resume.is_set()
+
     def _handle_command(self, obj: Any) -> None:
-        if isinstance(obj, dict) and obj.get("cmd") == "cancel":
+        if not isinstance(obj, dict):
+            return
+        cmd = obj.get("cmd")
+        if cmd == "cancel":
             self._cancel.set()
+            self._resume.set()  # release a paused loop so it can exit
+        elif cmd == "pause":
+            self._resume.clear()
+        elif cmd == "resume":
+            self._resume.set()
+
+    def _wait_if_paused(self) -> None:
+        """Block at an epoch boundary while paused, returning on resume or
+        cancel. A daemon stdin watcher delivers the pause/resume commands."""
+        if self._resume.is_set():
+            return
+        self._console("paused")
+        while not self._resume.wait(timeout=0.25):
+            if self._cancel.is_set():
+                break
+        self._console("resumed")
 
     # ── logging ───────────────────────────────────────────────────────
 
@@ -140,6 +165,7 @@ class Run:
 
     def epoch(self, i: int) -> None:
         """Mark the end of epoch `i` (1-based)."""
+        self._wait_if_paused()  # honor a pause request at the epoch boundary
         self._epoch = i
         self._log_gpu_memory()
         event = self._emitter.emit("epoch", run=self.id, epoch=i, of=self.total_epochs)

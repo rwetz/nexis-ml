@@ -7,6 +7,8 @@
 import io
 import json
 import os
+import threading
+import time
 
 import pytest
 
@@ -133,6 +135,38 @@ def test_should_stop_is_false_until_metric_seen(tmp_path):
     em, _ = emitter()
     with track("demo", project_dir=str(tmp_path), emitter=em) as run:
         assert run.should_stop("loss/val", patience=1) is False
+
+
+def test_pause_resume_and_cancel_flags(tmp_path):
+    em, _ = emitter()
+    with track("demo", project_dir=str(tmp_path), emitter=em) as run:
+        assert run.paused is False
+        run._handle_command({"cmd": "pause"})
+        assert run.paused is True
+        run._handle_command({"cmd": "resume"})
+        assert run.paused is False
+        # cancel must also release a pause so the loop can exit
+        run._handle_command({"cmd": "pause"})
+        run._handle_command({"cmd": "cancel"})
+        assert run.cancelled is True
+        assert run.paused is False
+
+
+def test_wait_if_paused_blocks_until_resume(tmp_path):
+    em, _ = emitter()
+    with track("demo", project_dir=str(tmp_path), emitter=em) as run:
+        run._wait_if_paused()  # not paused → returns immediately
+        run._handle_command({"cmd": "pause"})
+
+        def resume_soon():
+            time.sleep(0.1)
+            run._handle_command({"cmd": "resume"})
+
+        t = threading.Thread(target=resume_soon)
+        t.start()
+        run._wait_if_paused()  # blocks until the thread resumes
+        t.join()
+        assert run.paused is False
 
 
 def test_artifact_and_sample_events(tmp_path):

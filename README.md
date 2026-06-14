@@ -71,6 +71,7 @@ edit** — change the architecture, rerun, compare.
 | `nexis-ml infer --run <id> [--input …]` | One-shot prediction from a checkpoint (text for `textgen`, class for `tabular`) |
 | `nexis-ml serve --run <id>` | Inference loop: one JSON request per stdin line → one NDJSON response (drives the ML Lab playground) |
 | `nexis-ml runs [dir] [--json]` | List runs with final metrics |
+| `nexis-ml export --run <id> [--out f.html]` | Write a self-contained HTML report (charts + summary + samples) |
 | `nexis-ml env` | JSON capability report (torch version, CUDA, GPU name) |
 | `nexis-ml replay <run-dir> [--delay ms]` | Re-stream a finished run's event log (frontend dev tool) |
 

@@ -98,6 +98,25 @@ def main(argv: list[str] | None = None) -> int:
         "--nexis-protocol", action="store_true", default=argparse.SUPPRESS
     )
 
+    p_export = sub.add_parser(
+        "export", help="write a self-contained HTML report for a run"
+    )
+    p_export.add_argument("dir", nargs="?", default=".")
+    p_export.add_argument(
+        "--run", required=True, help="run id, run dir, or checkpoint path"
+    )
+    p_export.add_argument(
+        "--out", default=None, help="output .html path (default: <run>/report.html)"
+    )
+    p_export.add_argument(
+        "--html",
+        action="store_true",
+        help="HTML report (default; reserved for formats)",
+    )
+    p_export.add_argument(
+        "--nexis-protocol", action="store_true", default=argparse.SUPPRESS
+    )
+
     p_runs = sub.add_parser("runs", help="list runs in a project")
     p_runs.add_argument("dir", nargs="?", default=".")
     p_runs.add_argument("--json", action="store_true", dest="as_json")
@@ -131,6 +150,8 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_infer(args)
         if args.command == "serve":
             return _cmd_serve(args)
+        if args.command == "export":
+            return _cmd_export(args)
         if args.command == "runs":
             return _cmd_runs(args)
         if args.command == "replay":
@@ -301,6 +322,21 @@ def _cmd_serve(args: argparse.Namespace) -> int:
             emitter.emit("error", msg=str(e))
             continue
         emitter.emit("prediction", **result)
+    return 0
+
+
+def _cmd_export(args: argparse.Namespace) -> int:
+    from . import report
+
+    project = os.path.abspath(args.dir)
+    try:
+        run_dir = inference.resolve_run_dir(project, args.run)
+    except (FileNotFoundError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    out = report.write_html_report(run_dir, args.out)
+    stream = sys.stderr if os.environ.get(ENV_FLAG) == "1" else sys.stdout
+    print(f"wrote {out}", file=stream)
     return 0
 
 
