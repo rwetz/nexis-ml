@@ -19,7 +19,7 @@ from .config import load_config
 from .device import estimate_mlp_params, resolve_device
 from .harness import Run, track
 
-__version__ = "0.7.0"
+__version__ = "0.7.1"
 
 __all__ = [
     "track",

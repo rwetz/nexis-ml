@@ -33,7 +33,10 @@ EPOCHS = int(train_cfg.get("epochs", 15))
 BATCH_SIZE = int(train_cfg.get("batch_size", 32))
 LR = float(train_cfg.get("lr", 0.01))
 VAL_SPLIT = float(train_cfg.get("val_split", 0.2))
-HIDDEN = [int(h) for h in cfg.get("model", {}).get("hidden", [32, 16])]
+# `hidden` may be a single width (hidden = 64) or a list (hidden = [64, 32]);
+# normalize both to a list of layer widths (matches the Rust engine).
+_hidden = cfg.get("model", {}).get("hidden", [32, 16])
+HIDDEN = [int(h) for h in (_hidden if isinstance(_hidden, list) else [_hidden])]
 
 random.seed(SEED)
 torch.manual_seed(SEED)
