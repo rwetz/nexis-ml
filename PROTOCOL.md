@@ -28,10 +28,13 @@ messages arrive as JSON lines on stdin.
 ## Commands (Nexis → engine, stdin)
 
 ```jsonc
-{ "cmd": "cancel" }            // graceful stop; loop breaks after checkpoint
+{ "cmd": "cancel" }            // graceful stop; loop breaks after the checkpoint
+{ "cmd": "pause" }             // block at the next epoch boundary
+{ "cmd": "resume" }            // release a paused loop
 ```
 
-(`pause` / `resume` reserved for later.)
+`pause` / `resume` are honored at the next epoch boundary (a daemon stdin
+watcher delivers them); both the Python and Rust engines implement all three.
 
 ## Inference: `serve` (request/response over stdio)
 

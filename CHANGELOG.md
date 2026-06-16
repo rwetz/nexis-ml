@@ -3,6 +3,22 @@
 All notable changes to nexis-ml. Versions follow [SemVer](https://semver.org/);
 pre-1.0, minor bumps may change the CLI or harness API.
 
+## [0.7.2] — 2026-06-16
+
+### Added
+- **`blank` template** (`nexis-ml new blank`) — a from-scratch starting
+  point: a minimal `train.py` that trains a tiny net on a synthetic XOR toy
+  problem so it runs immediately, but is meant to be rewritten (design the
+  `Net`, replace `make_data`). For when you'd rather build the architecture
+  yourself than start from a worked example.
+
+## [0.7.1] — 2026-06-15
+
+### Fixed
+- The `tabular` template now accepts a **scalar `hidden`** (e.g.
+  `hidden = 16`) in `train.toml`, not only a list — matching the panel's
+  hyperparameter form and the Rust engine's `[model] hidden` key.
+
 ## [0.7.0] — 2026-06-13
 
 ### Added

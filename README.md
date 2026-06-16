@@ -66,7 +66,7 @@ edit** — change the architecture, rerun, compare.
 
 | Command | What it does |
 |---|---|
-| `nexis-ml new <template> [dir]` | Scaffold a project (templates: `tabular`, `textgen`, `image`) |
+| `nexis-ml new <template> [dir]` | Scaffold a project (templates: `tabular`, `textgen`, `image`, `blank`) |
 | `nexis-ml train [dir] [--config train.toml]` | Run the project's `train.py` |
 | `nexis-ml infer --run <id> [--input …]` | One-shot prediction from a checkpoint (text for `textgen`, class for `tabular`) |
 | `nexis-ml serve --run <id>` | Inference loop: one JSON request per stdin line → one NDJSON response (drives the ML Lab playground) |
@@ -78,6 +78,22 @@ edit** — change the architecture, rerun, compare.
 Global flag `--nexis-protocol` (or `NEXIS_ML_PROTOCOL=1`) switches
 stdout to the NDJSON event stream Nexis consumes — see
 [PROTOCOL.md](PROTOCOL.md). Without it you get human-readable progress.
+
+## Templates
+
+`nexis-ml new <template>` scaffolds one of:
+
+| Template | What you get |
+|---|---|
+| `tabular` | A small MLP over a CSV — classification (few distinct target values) or regression. Ships example data (two interleaved half-moons), so it trains immediately. Writes a confusion matrix per epoch. |
+| `textgen` | A tiny character-level GPT over a `.txt` file. Ships a small bundled corpus and streams a generated-text sample each pass; checkpoints embed the vocab so `infer`/`serve` can decode. |
+| `image` | A small CNN over a folder-per-class image directory. Ships four generated pattern classes (stdlib-only PNG writer) and writes a per-epoch sample-prediction grid plus a confusion matrix. |
+| `blank` | A minimal `train.py` with the harness wired up but no model — start a network from scratch. |
+
+Every scaffolded `train.py` is **yours to edit**: change the architecture,
+rerun `nexis-ml train`, and compare the curves. The Rust engine
+([`nexis-ml-rs`](https://github.com/rwetz/nexis-ml-rs)) is config-only, so
+`textgen` and `blank` (which need an editable `train.py`) are Python-only.
 
 ## Project layout (scaffolded)
 
