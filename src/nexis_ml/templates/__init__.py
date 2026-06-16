@@ -22,7 +22,7 @@ import zlib
 from importlib import resources
 from importlib.resources.abc import Traversable
 
-TEMPLATES = {"tabular", "textgen", "image"}
+TEMPLATES = {"tabular", "textgen", "image", "blank"}
 
 
 def scaffold(template: str, dest: str, force: bool = False) -> str:
