@@ -1,12 +1,12 @@
 # nexis-ml
 
-Hobby-grade ML engine for [Nexis](https://github.com/rwetz/Nexis) — create,
+Hobby-grade ML engine for [Nexis](https://github.com/rwetz/Nexis): create,
 train, and inspect **small models on small data**, with metrics streamed
 live to the Nexis terminal (or plain text in any other terminal).
 
 This is the engine half of the Nexis ML Suite: Nexis ships the UI
 (panels, live charts, run browser) and spawns this tool to do the actual
-work. It is deliberately useful standalone too — every command works in
+work. It is deliberately useful standalone too, and every command works in
 a plain shell.
 
 **Not** an MLOps platform, not distributed training, not an LLM serving
@@ -22,13 +22,13 @@ pipx install nexis-ml[torch]         # or: on PATH in every shell
 
 The core package is **stdlib-only** (detection, run listing, and replay
 stay instant); PyTorch is only needed to actually train, hence the
-extra. (Inside Nexis you don't need any of this — the ML Lab panel
+extra. (Inside Nexis you don't need any of this; the ML Lab panel
 installs the engine for you.)
 
 ### GPU (NVIDIA)
 
 The default torch wheel is CPU-only. For CUDA, install torch from the
-PyTorch index first — `--force-reinstall` matters, pip won't otherwise
+PyTorch index first, and `--force-reinstall` matters, pip won't otherwise
 swap a `+cpu` build for a `+cuXXX` build of the same version:
 
 ```sh
@@ -36,7 +36,7 @@ pip install torch --index-url https://download.pytorch.org/whl/cu130 --force-rei
 pip install nexis-ml[torch]
 ```
 
-Then set `device = "gpu"` in `train.toml` — or leave the default
+Then set `device = "gpu"` in `train.toml`, or leave the default
 `"auto"`, which uses the GPU only when the job is big enough to
 benefit. `nexis-ml env` shows what your install can do.
 
@@ -60,7 +60,7 @@ nexis-ml infer --run <run-id> --input "Once upon a time"
 
 `new` scaffolds a project with example data (two half-moons), a
 `train.toml` for hyperparameters, and a `train.py` that is **yours to
-edit** — change the architecture, rerun, compare.
+edit**: change the architecture, rerun, compare.
 
 ## Commands
 
@@ -76,7 +76,7 @@ edit** — change the architecture, rerun, compare.
 | `nexis-ml replay <run-dir> [--delay ms]` | Re-stream a finished run's event log (frontend dev tool) |
 
 Global flag `--nexis-protocol` (or `NEXIS_ML_PROTOCOL=1`) switches
-stdout to the NDJSON event stream Nexis consumes — see
+stdout to the NDJSON event stream Nexis consumes; see
 [PROTOCOL.md](PROTOCOL.md). Without it you get human-readable progress.
 
 ## Templates
@@ -85,10 +85,10 @@ stdout to the NDJSON event stream Nexis consumes — see
 
 | Template | What you get |
 |---|---|
-| `tabular` | A small MLP over a CSV — classification (few distinct target values) or regression. Ships example data (two interleaved half-moons), so it trains immediately. Writes a confusion matrix per epoch. |
+| `tabular` | A small MLP over a CSV: classification (few distinct target values) or regression. Ships example data (two interleaved half-moons), so it trains immediately. Writes a confusion matrix per epoch. |
 | `textgen` | A tiny character-level GPT over a `.txt` file. Ships a small bundled corpus and streams a generated-text sample each pass; checkpoints embed the vocab so `infer`/`serve` can decode. |
 | `image` | A small CNN over a folder-per-class image directory. Ships four generated pattern classes (stdlib-only PNG writer) and writes a per-epoch sample-prediction grid plus a confusion matrix. |
-| `blank` | A minimal `train.py` with the harness wired up but no model — start a network from scratch. |
+| `blank` | A minimal `train.py` with the harness wired up but no model, so you start a network from scratch. |
 
 Every scaffolded `train.py` is **yours to edit**: change the architecture,
 rerun `nexis-ml train`, and compare the curves. The Rust engine
@@ -99,7 +99,7 @@ rerun `nexis-ml train`, and compare the curves. The Rust engine
 
 ```
 my-experiment/
-  train.py          # model + loop — the file you edit
+  train.py          # model + loop, the file you edit
   train.toml        # hyperparameters
   data/             # your CSVs / files
   .nexis-ml/runs/   # one dir per run: config.json, metrics.jsonl,
@@ -139,11 +139,11 @@ pytest
 ruff check src tests && ruff format --check src tests
 ```
 
-The test suite needs no torch — core stays framework-free by design.
+The test suite needs no torch, because core stays framework-free by design.
 
 ## Publishing
 
-Releases go to PyPI via **trusted publishing** (OIDC) — no API token is
+Releases go to PyPI via **trusted publishing** (OIDC), so no API token is
 stored. `publish.yml` runs on a published GitHub Release; CI's `package`
 job builds + `twine check`s on every push so packaging never breaks by
 surprise.
